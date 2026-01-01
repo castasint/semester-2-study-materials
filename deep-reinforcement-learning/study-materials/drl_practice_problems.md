@@ -1,12 +1,12 @@
-# 📝 DRL Practice Problems - Midterm Prep (Updated)
+# 📝 DRL Practice Problems - Midterm Prep (Updated V2)
 
-> **AIMLCZG512 | Pattern: Bandits, Gridworld, Modeling | Closed Book**
+> **AIMLCZG512 | Patterns: History Table, Modeling, Diagram VI | Closed Book**
 
 ---
 
 ## SECTION 1: Multi-Armed Bandits (Session 2-3)
 
-### Problem 1: UCB from History Table (Exam Pattern) ⭐
+### Problem 1: UCB from History Table (QP-1 Pattern) ⭐
 
 A news recommender system has 4 categories. The following table shows the history of the last 8 steps (1=Click, 0=No Click):
 
@@ -28,126 +28,89 @@ c) If using $\varepsilon$-greedy with $\varepsilon=0.2$, what is the probability
 
 ---
 
-**Solution:**
+### Problem 2: Modeling Non-Stationary Bandits (QP-2 Pattern) ⭐
 
-```
-a) Calculate Q(a) = Total Rewards / Count
-   
-   Tech:    Returns=[1, 0] → Q = 1/2 = 0.5
-   Sports:  Returns=[0, 1, 1] → Q = 2/3 ≈ 0.67
-   Politics: Returns=[1, 1] → Q = 2/2 = 1.0
-   Entertainment: Returns=[1] → Q = 1/1 = 1.0
-
-b) UCB Calculation for Step 9 (t=9)
-   Formula: UCB(a) = Q(a) + c × √(ln t / N(a))
-   ln(9) ≈ 2.2
-   
-   Tech (N=2):    0.5 + 1.5 × √(2.2/2) = 0.5 + 1.5 × 1.05 = 2.07
-   Sports (N=3):  0.67 + 1.5 × √(2.2/3) = 0.67 + 1.5 × 0.86 = 1.96
-   Politics (N=2): 1.0 + 1.5 × √(2.2/2) = 1.0 + 1.5 × 1.05 = 2.57
-   Entertainment (N=1): 1.0 + 1.5 × √(2.2/1) = 1.0 + 1.5 × 1.48 = 3.22
-   
-   Next action: Entertainment (Highest UCB = 3.22)
-
-c) ε-Greedy Probability (ε=0.2)
-   Best actions (tie): Politics, Entertainment (Q=1.0)
-   Wait! Tie-breaking is random.
-   
-   P(exploit) = 1 - ε = 0.8
-   P(explore) = ε = 0.2
-   
-   Is 'Tech' a greedy action? No (Q=0.5 < 1.0).
-   So 'Tech' can only be chosen during exploration.
-   
-   P(Tech) = ε / |A| = 0.2 / 4 = 0.05
-   
-   (Note: If Tech was one of the best actions, logic would be different)
-```
-
----
-
-### Problem 2: Incremental Update
-
-A 3-armed bandit has the following Q-values after 10 steps:
-- Q(a₁) = 2.5 (selected 4 times)
-- Q(a₂) = 3.0 (selected 5 times)  
-- Q(a₃) = 1.8 (selected 1 time)
-
-You select action a₂ and receive reward R = 4.5.
+An eCommerce platform shows one of 3 brands (Adidas, Nike, Sketchers) to users. User preferences change over time due to market trends.
 
 **Questions:**
-a) Calculate the new Q(a₂) using sample average method. (2M)
-b) Calculate the new Q(a₂) using constant step-size α = 0.1. (2M)
-
----
+a) Why is this better modeled as a Non-Stationary Bandit rather than a standard MAB? (2M)
+b) Which algorithm is better suited: Sample Average or Constant Step-Size ($\alpha$)? Why? (1.5M)
+c) List two hyperparameters involved and their impact. (1.5M)
 
 **Solution:**
 
 ```
-a) Sample average method:
-   n = 5 (times a₂ was selected)
-   New n = 6
-   α = 1/n = 1/6 ≈ 0.167
+a) Non-Stationary because reward probabilities change over time. 
+   Standard MAB assumes fixed distributions. A brand popular today might not be popular next month.
    
-   Q_new(a₂) = Q(a₂) + α[R - Q(a₂)]
-             = 3.0 + 0.167 × [4.5 - 3.0]
-             = 3.25
+b) Constant Step-Size (α) is better.
+   Sample average (1/n) gives equal weight to all past rewards.
+   Constant α gives more weight to recent rewards (exponential decay), allowing the agent to adapt to trends.
 
-b) Constant step-size α = 0.1:
-   Q_new(a₂) = 3.0 + 0.1(1.5) = 3.15
+c) Hyperparameters:
+   1. Epsilon (ε): Controls exploration. Higher ε adapts faster but exploits less.
+   2. Step-size (α): Controls learning rate. Higher α forgets old history faster.
 ```
 
 ---
 
 ## SECTION 2: MDP Modeling & Gridworld (Session 3-5)
 
-### Problem 3: MDP Design (Exam Pattern) ⭐
+### Problem 3: MDP Design (QP-1 & QP-2 Pattern) ⭐
 
-An intelligent traffic controller manages a 4-way intersection. It observes:
-- Traffic density on North, South, East, West roads (Low, Med, High)
-- Pedestrian button status (Pressed, Not Pressed)
-
-It can choose actions:
-- A1: Allow N-S traffic
-- A2: Allow E-W traffic
-- A3: Allow Pedestrians
+A robot delivers parcels in a grid town. It receives +10 for delivery, -10 for wrong delivery, and -1 per step.
 
 **Questions:**
-a) Define the State Space and Action Space formally. (2M)
-b) Design a Reward Function to minimize waiting time and ensure safety. (2M)
-c) Is this suitable for Model-Based or Model-Free RL? Why? (1M)
-
----
+a) Define the State Space formally. (Includes what?)
+b) Define the structure of an Episode for this task.
+c) Calculate return for: 3 deliveries in 5 steps (total). γ=0.9.
 
 **Solution:**
 
 ```
-a) State & Action Space:
-   State S = < D_N, D_S, D_E, D_W, Ped >
-   Where D_i ∈ {Low, Med, High} and Ped ∈ {0, 1}
-   Total states = 3 × 3 × 3 × 3 × 2 = 162 states
-   
-   Action Space A = {A1, A2, A3}
+a) State S = (Robot_Position, Parcel_Status)
+   Need to track where robot is AND which parcels are picked/delivered.
 
-b) Reward Function:
-   Goal: Minimize wait time, maximize safety.
-   
-   R = - (Total Vehicles Waiting) + (Safety Bonus)
-   
-   Example logic:
-   - If A1 chosen: R = - (D_E + D_W)  [Penalty for waiting cars]
-   - If A3 chosen when Ped=1: R = +50 [Safety bonus]
-   - If A3 chosen when Ped=0: R = -10 [Unnecessary stop]
+b) Episode: Starts when robot leaves depot, ends when ALL parcels delivered.
 
-c) Algorithm Choice:
-   Model-Free (like Q-Learning) is better because:
-   - The environment dynamics (exact probability of traffic arrival) are complex and hard to model perfectly.
-   - Easier to learn from experience (interactions).
+c) Return Calculation:
+   Rewards: -1, -1, +10(del), -1, +10(del), +10(del) ... (example sequence)
+   Total Undiscounted: ΣR
+   Total Discounted: Σ γ^t R_t
 ```
 
 ---
 
-### Problem 4: Gridworld Value Update (Numerical) ⭐
+### Problem 4: Diagram-based Value Iteration (QP-2 Pattern) ⭐
+
+Consider this system with 3 states (S1, S2, S3) and 2 actions (Roll, Wait).
+Transitions shown in diagram (simplified text version):
+- S1 --Roll (0.5, R=1)--> S2
+- S1 --Roll (0.5, R=3)--> S3
+- S1 --Wait (1.0, R=0)--> S1
+- (Assume similar transitions for others)
+
+**Task:**
+Perform 2 iterations of Value Iteration starting from V=0. γ=0.5.
+
+**Solution Approach:**
+
+```
+Iteration 1 (V=0 everywhere):
+V_new(S1) = max_a [ R(s,a) + γ Σ P V_old ]
+Since V_old=0, this reduces to max expected immediate reward.
+
+Q(S1, Wait) = 0 + 0 = 0
+Q(S1, Roll) = (0.5×1 + 0.5×3) + 0 = 0.5 + 1.5 = 2.0
+V(S1) = 2.0
+
+Iteration 2:
+Use V=[2.0, ... ] to compute next values.
+```
+
+---
+
+### Problem 5: Gridworld Value Update with Notation (QP-1 Pattern) ⭐
 
 Consider a 3x3 grid world.
 - Goal at (3,3) with Reward +10.
@@ -158,8 +121,6 @@ Consider a 3x3 grid world.
 **Questions:**
 a) Write the specific Bellman Optimality Equation for V*(2,2). (2M)
 b) Assume currently V(s)=0 for all states except V(3,3)=0. Perform one Value Iteration update for V(2,2). (3M)
-
----
 
 **Solution:**
 
@@ -176,45 +137,21 @@ a) Bellman Equation for (2,2):
    }
 
 b) Value Update (Iteration 1):
-   R = -1 for all moves.
-   Current V(s') are all 0.
-   
-   Move North → (1,2): -1 + 0.9(0) = -1
-   Move South → (3,2): -1 + 0.9(0) = -1
-   Move East  → (2,3): -1 + 0.9(0) = -1
-   Move West  → (2,1): -1 + 0.9(0) = -1
-   
    V_new(2,2) = max(-1, -1, -1, -1) = -1
-   
-   (Note: If V(3,3) was 10, then being next to it would give higher value. 
-   Here we assumed V=0 init, so first update just propagates immediate reward.)
 ```
 
 ---
 
-### Problem 5: Return Calculation
+## SECTION 3: Monte Carlo & Return Calculation
 
-Episode: A → B → Terminal.
-Rewards: R₁=2, R₂=5.
-γ = 0.5.
+### Problem 6: Return Calculation (Discounted vs Undiscounted)
 
-**Calculate G₀ (return from A).**
-
----
-
-**Solution:**
-
-```
-G_T = 0
-G_B = R₂ + γ(0) = 5
-G_A = R₁ + γ(G_B) = 2 + 0.5(5) = 2 + 2.5 = 4.5
-```
+Detailed in Problem 3c.
+Key Concept: Discouting reduces value of future rewards. If γ is small, agent prefers immediate rewards (mypoic). If γ is large, agent plans for long term.
 
 ---
 
-## SECTION 3: Monte Carlo & Concepts
-
-### Problem 6: ε-Soft Policy Update
+### Problem 7: ε-Soft Policy Update
 
 After one episode, you have Q-values for state S:
 - Q(a₁) = 5.0
@@ -226,8 +163,6 @@ Using ε = 0.4.
 a) Which action is greedy?
 b) Calculate the new probabilities π(a₁|S) and π(a₂|S).
 
----
-
 **Solution:**
 
 ```
@@ -238,49 +173,11 @@ b) ε-Soft Probabilities:
    
    P(a₁) = 1 - ε + ε/|A|
          = 1 - 0.4 + 0.4/2
-         = 0.6 + 0.2
          = 0.8
    
    P(a₂) = ε/|A|
-         = 0.4/2
          = 0.2
-   
-   Check: 0.8 + 0.2 = 1.0 ✓
 ```
-
----
-
-### Problem 7: Algorithms Conceptual
-
-**Match the scenarios to the algorithm (DP, MC, TD):**
-
-1.  "I have a perfect map of the maze."  -> (____)
-2.  "I need to learn by walking through the maze, but I update my plan after every step." -> (____)
-3.  "I learn only after finishing the whole maze run." -> (____)
-
----
-
-**Solution:**
-
-```
-1. DP (Dynamic Programming) - Model-based, uses perfect map.
-2. TD (Temporal Difference) - Model-free, bootstraps (updates every step).
-3. MC (Monte Carlo) - Model-free, updates after full episode.
-```
-
----
-
-## 📊 Answer Key Summary
-
-| Problem | Type | Key Answer |
-|---------|------|------------|
-| 1 | Bandit History | Q: 0.5, 0.67, 1.0, 1.0 → Next: Entertainment |
-| 2 | Q Update | 3.25 (sample avg) |
-| 3 | Modeling | States=162, R depends on wait time |
-| 4 | Gridworld | V(2,2) = -1 (first iter) |
-| 5 | Return | G = 4.5 |
-| 6 | ε-Soft | P(Best) = 0.8 |
-| 7 | Concepts | 1-DP, 2-TD, 3-MC |
 
 ---
 
